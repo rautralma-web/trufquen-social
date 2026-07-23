@@ -1,0 +1,33 @@
+name: Métricas semanales
+
+# Lunes 09:00 Chile (13:00 UTC en invierno). Deja state/metricas.csv actualizado
+# para el informe semanal.
+on:
+  schedule:
+    - cron: '0 13 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  metricas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Leer insights
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+        run: node scripts/insights.mjs
+      - name: Guardar
+        run: |
+          if [ -n "$(git status --porcelain state/)" ]; then
+            git config user.name  "trufquen-bot"
+            git config user.email "bot@users.noreply.github.com"
+            git add state/
+            git commit -m "métricas: actualización semanal"
+            git push
+          fi

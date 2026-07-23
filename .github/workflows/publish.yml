@@ -1,0 +1,51 @@
+name: Publicar en Instagram
+
+# Corre cada 15 min y publica lo que esté vencido en content/calendario.json.
+# GitHub puede retrasar los cron hasta ~15 min bajo carga; por eso se revisa
+# seguido en vez de programar un cron por post.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      id:
+        description: 'Publicar un post concreto (ej. dia-2). Vacío = lo que toque.'
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publicar
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Publicar
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+        run: |
+          if [ -n "${{ github.event.inputs.id }}" ]; then
+            node scripts/publish.mjs --id "${{ github.event.inputs.id }}"
+          else
+            node scripts/publish.mjs
+          fi
+
+      - name: Registrar lo publicado
+        run: |
+          if [ -n "$(git status --porcelain state/)" ]; then
+            git config user.name  "trufquen-bot"
+            git config user.email "bot@users.noreply.github.com"
+            git add state/
+            git commit -m "registro: publicación automática"
+            git push
+          fi
