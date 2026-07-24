@@ -12,17 +12,20 @@ export const API = 'https://graph.facebook.com/v25.0';
  * Nunca imprime los valores.
  */
 function cargarEnvLocal() {
+  const f = `${homedir()}/.trufquen/.env`;
+  if (!existsSync(f)) return;
   try {
-    const { homedir } = require('node:os');
-    const f = `${homedir()}/.trufquen/.env`;
-    if (!existsSync(f)) return;
     for (const linea of readFileSync(f, 'utf8').split('\n')) {
-      const m = linea.match(/^\s*(?:export\s+)?([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+      if (/^\s*#/.test(linea)) continue; // comentario
+      const m = linea.match(/^\s*(?:export\s+)?([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
       if (!m) continue;
       const valor = m[2].replace(/^["']|["']$/g, '').trim();
       if (valor && !process.env[m[1]]) process.env[m[1]] = valor;
     }
-  } catch { /* si no existe o no se puede leer, se sigue con el entorno normal */ }
+  } catch (e) {
+    // No se silencia: un archivo ilegible es un problema que hay que ver.
+    console.error(`Aviso: no se pudo leer ${f} — ${e.message}`);
+  }
 }
 cargarEnvLocal();
 
