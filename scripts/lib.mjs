@@ -1,12 +1,39 @@
+import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+
 // Trufquén — helpers compartidos para la Instagram Graph API.
 // Sin dependencias: usa fetch nativo de Node 18+.
 
 export const API = 'https://graph.facebook.com/v21.0';
 
+/**
+ * Carga ~/.trufquen/.env si existe, sin necesidad de `source` ni `export`.
+ * Acepta líneas KEY=VALOR, con o sin el prefijo `export`, y comentarios con #.
+ * Nunca imprime los valores.
+ */
+function cargarEnvLocal() {
+  try {
+    const { homedir } = require('node:os');
+    const f = `${homedir()}/.trufquen/.env`;
+    if (!existsSync(f)) return;
+    for (const linea of readFileSync(f, 'utf8').split('\n')) {
+      const m = linea.match(/^\s*(?:export\s+)?([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+      if (!m) continue;
+      const valor = m[2].replace(/^["']|["']$/g, '').trim();
+      if (valor && !process.env[m[1]]) process.env[m[1]] = valor;
+    }
+  } catch { /* si no existe o no se puede leer, se sigue con el entorno normal */ }
+}
+cargarEnvLocal();
+
 /** Lee una variable de entorno obligatoria sin volcarla nunca a los logs. */
 export function env(name, { required = true } = {}) {
   const v = process.env[name];
-  if (required && !v) throw new Error(`Falta la variable de entorno ${name}`);
+  if (required && !v) {
+    throw new Error(
+      `Falta ${name}. Debe estar en el entorno o en ~/.trufquen/.env (una línea "${name}=valor").`
+    );
+  }
   return v;
 }
 
