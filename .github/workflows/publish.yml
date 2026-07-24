@@ -1,11 +1,14 @@
 name: Publicar en Instagram
 
-# Corre cada 15 min y publica lo que esté vencido en content/calendario.json.
-# GitHub puede retrasar los cron hasta ~15 min bajo carga; por eso se revisa
-# seguido en vez de programar un cron por post.
+# Revisa cada 15 min y publica lo que esté vencido en content/calendario.json.
+#
+# Los minutos NO son redondos a propósito. GitHub documenta que los cron se
+# retrasan bajo carga, y la carga se concentra en el minuto 0 de cada hora
+# porque casi todo el mundo programa ahí. Corriendo en 3/18/33/48 caemos en
+# horario de menos congestión y el disparo llega más puntual.
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '3,18,33,48 * * * *'
   workflow_dispatch:
     inputs:
       id:
@@ -23,11 +26,11 @@ jobs:
   publicar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
 
       # En los arranques manuales se comprueba todo antes de tocar nada.
       # Así una ejecución de prueba confirma que los secretos sirven,
