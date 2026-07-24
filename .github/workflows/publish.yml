@@ -29,6 +29,16 @@ jobs:
         with:
           node-version: '20'
 
+      # En los arranques manuales se comprueba todo antes de tocar nada.
+      # Así una ejecución de prueba confirma que los secretos sirven,
+      # sin publicar. En los automáticos se omite para no gastar llamadas.
+      - name: Comprobar el sistema
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+        run: node scripts/verificar.mjs
+
       - name: Publicar
         env:
           IG_TOKEN: ${{ secrets.IG_TOKEN }}
