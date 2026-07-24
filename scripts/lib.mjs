@@ -4,7 +4,7 @@ import { homedir } from "node:os";
 // Trufquén — helpers compartidos para la Instagram Graph API.
 // Sin dependencias: usa fetch nativo de Node 18+.
 
-export const API = 'https://graph.facebook.com/v21.0';
+export const API = 'https://graph.facebook.com/v25.0';
 
 /**
  * Carga ~/.trufquen/.env si existe, sin necesidad de `source` ni `export`.
