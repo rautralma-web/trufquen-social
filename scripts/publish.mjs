@@ -20,6 +20,14 @@ const ignoreTime = args.includes('--all');
 const onlyId = args[args.indexOf('--id') + 1] && args.includes('--id') ? args[args.indexOf('--id') + 1] : null;
 
 const cal = JSON.parse(readFileSync(join(ROOT, 'content/calendario.json'), 'utf8'));
+
+// Antes de configurar las credenciales, el cron corre cada 15 min y no debe
+// fallar: se sale limpio para no llenar el correo de avisos de error.
+if (!dryRun && (!process.env.IG_TOKEN || !process.env.IG_USER_ID)) {
+  console.log('Sin credenciales configuradas (IG_TOKEN / IG_USER_ID). No hay nada que publicar todavía.');
+  process.exit(0);
+}
+
 const token = dryRun ? 'DRYRUN' : env('IG_TOKEN');
 const igUser = dryRun ? '0000000000' : env('IG_USER_ID');
 const base = cal.media_base_url;
