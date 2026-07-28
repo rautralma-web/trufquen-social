@@ -18,6 +18,9 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
+      - name: Verificar vencimiento del token
+        run: node scripts/check-token.mjs
+
       - name: Leer insights
         env:
           IG_TOKEN: ${{ secrets.IG_TOKEN }}
