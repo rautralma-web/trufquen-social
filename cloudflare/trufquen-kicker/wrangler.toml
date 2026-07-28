@@ -1,0 +1,9 @@
+name = "trufquen-kicker"
+main = "src/worker.js"
+compatibility_date = "2026-07-24"
+
+# Cada 5 minutos. Cloudflare Cron Triggers dispara a la hora exacta —
+# a diferencia del "schedule" de GitHub Actions, que bajo poca actividad
+# puede demorarse horas.
+[triggers]
+crons = ["*/5 * * * *"]
