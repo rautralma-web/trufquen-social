@@ -43,6 +43,8 @@ function due(post) {
 }
 
 async function publicar(post) {
+  if (post.video) return publicarReel(post);
+
   const urls = post.images.map((f) => `${base}/${post.folder}/${f}`);
   console.log(`\n▸ ${post.id} — ${post.pilar} · ${urls.length} imagen(es)`);
   console.log(`  programado: ${post.publish_at_local} (Chile)`);
@@ -92,6 +94,34 @@ async function publicar(post) {
     mkdirSync(join(ROOT, 'state/published'), { recursive: true });
     writeFileSync(stateFile(post.id), JSON.stringify({
       id: post.id, media_id: out.id, published_at: new Date().toISOString(), slides: urls.length,
+    }, null, 2));
+  }
+  return out.id;
+}
+
+// Los Reels tardan más en procesarse que una imagen: el contenedor de video
+// puede quedar "IN_PROGRESS" varios minutos, por eso el timeout es más largo.
+async function publicarReel(post) {
+  const url = `${base}/${post.folder}/${post.video}`;
+  console.log(`\n▸ ${post.id} — ${post.pilar} · reel`);
+  console.log(`  programado: ${post.publish_at_local} (Chile)`);
+
+  const c = await graph(`${igUser}/media`, {
+    method: 'POST',
+    params: { media_type: 'REELS', video_url: url, caption: post.caption, share_to_feed: 'true' },
+    token, dryRun,
+  });
+  await waitContainer(c.id, { token, dryRun, timeoutMs: 300000 });
+
+  const out = await graph(`${igUser}/media_publish`, {
+    method: 'POST', params: { creation_id: c.id }, token, dryRun,
+  });
+  console.log(`  ✅ publicado — media id ${out.id}`);
+
+  if (!dryRun) {
+    mkdirSync(join(ROOT, 'state/published'), { recursive: true });
+    writeFileSync(stateFile(post.id), JSON.stringify({
+      id: post.id, media_id: out.id, published_at: new Date().toISOString(), tipo: 'reel',
     }, null, 2));
   }
   return out.id;
